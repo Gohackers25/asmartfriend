@@ -823,12 +823,35 @@
 
         // Initialize app
         function init() {
+            // Check for URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const userParam = urlParams.get('user');
+            
+            if (userParam) {
+                // Normalize the user parameter (capitalize first letter)
+                const normalizedUser = userParam.charAt(0).toUpperCase() + userParam.slice(1).toLowerCase();
+                
+                // Check if it's a valid user
+                if (allUsers.includes(normalizedUser)) {
+                    // Auto-select the user and skip popup
+                    selectUser(normalizedUser);
+                    return;
+                }
+            }
+            
+            // No valid user parameter, show the selector modal
+            console.log('💡 Tip: You can skip user selection by adding ?user=oto (or tanishqa, karthik, bharath) to the URL');
             // App is initialized, waiting for user selection
         }
 
         function selectUser(selectedUser) {
             currentUser = selectedUser;
             friends = allUsers.filter(user => user !== selectedUser);
+            
+            // Update URL to reflect selected user
+            const url = new URL(window.location);
+            url.searchParams.set('user', selectedUser.toLowerCase());
+            window.history.replaceState({}, '', url);
             
             // Update UI
             userSelector.style.display = 'none';
