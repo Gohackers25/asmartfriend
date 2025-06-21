@@ -1507,14 +1507,23 @@
                     break;
             }
 
-            // Show notification in chat for the session initiator
+            // The session initiator automatically participates, so skip the notification
+            // and go directly to preferences
             setTimeout(() => {
-                addNotificationMessage();
-                // Update the notification text
-                const notifText = document.getElementById('notificationText');
-                if (notifText) {
-                    notifText.textContent = notificationContent;
-                }
+                // Automatically mark the initiator as participating
+                responses[currentUser] = { participating: true };
+                broadcastToSession(currentSessionId, 'response_submitted', {
+                    user: currentUser,
+                    participating: true,
+                    response: responses[currentUser]
+                });
+                saveSession();
+                
+                addMessage(`✅ You're organizing this ${currentDecisionType}! Let me gather your preferences.`, 'bot');
+                
+                setTimeout(() => {
+                    addPreferencesForm();
+                }, 1000);
             }, 2000);
         }
 
