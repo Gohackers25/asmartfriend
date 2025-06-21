@@ -756,9 +756,7 @@
             </div>
 
             <div class="chat-messages" id="chatMessages">
-                <div class="message message-system">
-                    Welcome to DecideTogether! Please select who you are to get started.
-                </div>
+                <!-- Messages will be added dynamically -->
             </div>
         </div>
     </div>
@@ -867,16 +865,6 @@
         }
         
         function getOrCreateSession(user) {
-            // Look for an active session that this user can join
-            const activeSession = Object.values(allSessions).find(session => 
-                session.sessionActive && 
-                (Date.now() - session.timestamp) < 60 * 60 * 1000 // 1 hour for active sessions
-            );
-            
-            if (activeSession) {
-                return activeSession.sessionId;
-            }
-            
             // Look for existing session for this user
             const existingSession = Object.values(allSessions).find(session => 
                 session.user === user && 
@@ -887,9 +875,24 @@
                 return existingSession.sessionId;
             }
             
-            // Create new session
+            // Create new session for this user
             const newSessionId = generateSessionId();
             return newSessionId;
+        }
+        
+        function getSharedSessionId() {
+            // Find the most recent active session to determine the shared session ID
+            const activeSessions = Object.values(allSessions).filter(session => 
+                session.sessionActive && 
+                (Date.now() - session.timestamp) < 60 * 60 * 1000 // 1 hour for active sessions
+            );
+            
+            if (activeSessions.length > 0) {
+                // Return the most recent active session ID
+                return activeSessions.sort((a, b) => b.timestamp - a.timestamp)[0].sessionId;
+            }
+            
+            return currentSessionId;
         }
         
         function loadSessionState(sessionId) {
@@ -910,13 +913,14 @@
         }
         
         function broadcastToSession(sessionId, eventType, data) {
-            // Simulate broadcasting by storing events in localStorage
-            const eventKey = `session_event_${sessionId}`;
+            // Broadcast to a global event channel so all users can receive
+            const eventKey = `session_event_global`;
             const event = {
                 type: eventType,
                 data: data,
                 timestamp: Date.now(),
-                from: currentUser
+                from: currentUser,
+                sessionId: sessionId
             };
             
             let events = [];
@@ -941,8 +945,8 @@
         function listenForSessionEvents() {
             if (!currentSessionId) return;
             
-            const eventKey = `session_event_${currentSessionId}`;
-            const lastCheckKey = `last_check_${currentSessionId}_${currentUser}`;
+            const eventKey = `session_event_global`;
+            const lastCheckKey = `last_check_global_${currentUser}`;
             
             const lastCheck = localStorage.getItem(lastCheckKey) || '0';
             const events = JSON.parse(localStorage.getItem(eventKey) || '[]');
@@ -975,10 +979,22 @@
                     break;
                 case 'decision_started':
                     if (event.data.initiator !== currentUser) {
+                        // Update local session state
+                        currentDecisionType = event.data.type;
+                        decisionContext = event.data.decisionContext || {};
+                        sessionActive = true;
+                        sessionStarted = true;
+                        
+                        // Update UI
+                        sessionStatus.textContent = 'Active Session';
+                        sessionStatus.className = 'status-badge status-active';
+                        decisionTypes.style.display = 'none';
+                        
                         addMessage(`📋 ${event.data.initiator} started a ${event.data.type} decision: ${event.data.context}`, 'system');
-                        // Show notification for other users
+                        
+                        // Show notification for other users to join
                         setTimeout(() => {
-                            if (!awaitingUserResponse) {
+                            if (!awaitingUserResponse && !responses[currentUser]) {
                                 addNotificationMessage();
                                 const notifText = document.getElementById('notificationText');
                                 if (notifText) {
@@ -986,6 +1002,8 @@
                                 }
                             }
                         }, 1000);
+                        
+                        saveSession();
                     }
                     break;
                 case 'response_submitted':
@@ -1475,7 +1493,8 @@
                 initiator: currentUser,
                 type: currentDecisionType,
                 context: contextMessage,
-                invitationText: invitationText
+                invitationText: invitationText,
+                decisionContext: decisionContext
             });
 
             showTypingIndicator();
