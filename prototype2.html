@@ -961,7 +961,14 @@
             }
         }
         
+        let lastResetTime = 0;
+        
         function handleSessionEvent(event) {
+            // Prevent processing events that are too old (more than 5 minutes)
+            if (Date.now() - event.timestamp > 5 * 60 * 1000) {
+                return;
+            }
+            
             switch (event.type) {
                 case 'user_joined':
                     addMessage(`🎉 ${event.data.user} joined the session!`, 'system');
@@ -996,9 +1003,12 @@
                     }
                     break;
                 case 'session_reset':
-                    if (event.data.initiator !== currentUser) {
+                    // Prevent rapid-fire reset events (debounce with 5 second window)
+                    if (event.data.initiator !== currentUser && 
+                        event.timestamp > lastResetTime + 5000) {
+                        lastResetTime = event.timestamp;
                         addMessage('🔄 Session has been reset by ' + event.data.initiator, 'system');
-                        resetSession();
+                        resetSessionFromEvent();
                     }
                     break;
             }
@@ -1879,6 +1889,23 @@
             saveSession();
 
             addMessage('🎉 Session completed! Ready for your next group decision.', 'system');
+        }
+        
+        function resetSessionFromEvent() {
+            // Reset session state without broadcasting (to prevent infinite loop)
+            sessionActive = false;
+            sessionStarted = false;
+            responses = {};
+            awaitingUserResponse = false;
+            currentDecisionType = null;
+            decisionContext = {};
+
+            decisionTypes.style.display = 'block';
+            sessionStatus.textContent = 'Ready to Start';
+            sessionStatus.className = 'status-badge status-waiting';
+            
+            // Save session state but don't broadcast
+            saveSession();
         }
 
         // Initialize the app
