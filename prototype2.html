@@ -750,6 +750,7 @@
                     <div class="session-title">Group Decision Chat</div>
                     <div class="session-status">
                         <div class="status-badge status-waiting" id="sessionStatus">Ready to Start</div>
+                        <div style="font-size: 12px; color: #666; margin-left: 10px;" id="sessionId"></div>
                     </div>
                 </div>
             </div>
@@ -800,7 +801,11 @@
     </div>
 
     <script>
-        // App state
+        // Session management
+        let currentSessionId = null;
+        let allSessions = {};
+        
+        // App state (now session-specific)
         let sessionActive = false;
         let currentUser = null;
         let allUsers = ['Oto', 'Tanishqa', 'Karthik', 'Bharath'];
@@ -810,10 +815,14 @@
         let awaitingUserResponse = false;
         let currentDecisionType = null;
         let decisionContext = {};
+        
+        // Session storage key
+        const SESSIONS_STORAGE_KEY = 'decidetogether_sessions';
 
         // DOM elements
         const chatMessages = document.getElementById('chatMessages');
         const sessionStatus = document.getElementById('sessionStatus');
+        const sessionIdElement = document.getElementById('sessionId');
         const userSelector = document.getElementById('userSelector');
         const userProfile = document.getElementById('userProfile');
         const userName = document.getElementById('userName');
@@ -821,8 +830,195 @@
         const friendsList = document.getElementById('friendsList');
         const decisionTypes = document.getElementById('decisionTypes');
 
+        // Session management functions
+        function generateSessionId() {
+            return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        }
+        
+        function saveSession() {
+            if (!currentSessionId) return;
+            
+            const sessionData = {
+                sessionId: currentSessionId,
+                user: currentUser,
+                sessionActive,
+                responses,
+                sessionStarted,
+                awaitingUserResponse,
+                currentDecisionType,
+                decisionContext,
+                timestamp: Date.now()
+            };
+            
+            allSessions[currentSessionId] = sessionData;
+            localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(allSessions));
+        }
+        
+        function loadSessions() {
+            const stored = localStorage.getItem(SESSIONS_STORAGE_KEY);
+            if (stored) {
+                try {
+                    allSessions = JSON.parse(stored);
+                } catch (e) {
+                    console.log('Error loading sessions:', e);
+                    allSessions = {};
+                }
+            }
+        }
+        
+        function getOrCreateSession(user) {
+            // Look for an active session that this user can join
+            const activeSession = Object.values(allSessions).find(session => 
+                session.sessionActive && 
+                (Date.now() - session.timestamp) < 60 * 60 * 1000 // 1 hour for active sessions
+            );
+            
+            if (activeSession) {
+                return activeSession.sessionId;
+            }
+            
+            // Look for existing session for this user
+            const existingSession = Object.values(allSessions).find(session => 
+                session.user === user && 
+                (Date.now() - session.timestamp) < 24 * 60 * 60 * 1000 // 24 hours
+            );
+            
+            if (existingSession) {
+                return existingSession.sessionId;
+            }
+            
+            // Create new session
+            const newSessionId = generateSessionId();
+            return newSessionId;
+        }
+        
+        function loadSessionState(sessionId) {
+            const session = allSessions[sessionId];
+            if (session) {
+                currentUser = session.user;
+                sessionActive = session.sessionActive || false;
+                responses = session.responses || {};
+                sessionStarted = session.sessionStarted || false;
+                awaitingUserResponse = session.awaitingUserResponse || false;
+                currentDecisionType = session.currentDecisionType || null;
+                decisionContext = session.decisionContext || {};
+                
+                // Update timestamp
+                session.timestamp = Date.now();
+                saveSession();
+            }
+        }
+        
+        function broadcastToSession(sessionId, eventType, data) {
+            // Simulate broadcasting by storing events in localStorage
+            const eventKey = `session_event_${sessionId}`;
+            const event = {
+                type: eventType,
+                data: data,
+                timestamp: Date.now(),
+                from: currentUser
+            };
+            
+            let events = [];
+            const stored = localStorage.getItem(eventKey);
+            if (stored) {
+                try {
+                    events = JSON.parse(stored);
+                } catch (e) {
+                    events = [];
+                }
+            }
+            
+            events.push(event);
+            // Keep only last 50 events
+            if (events.length > 50) {
+                events = events.slice(-50);
+            }
+            
+            localStorage.setItem(eventKey, JSON.stringify(events));
+        }
+        
+        function listenForSessionEvents() {
+            if (!currentSessionId) return;
+            
+            const eventKey = `session_event_${currentSessionId}`;
+            const lastCheckKey = `last_check_${currentSessionId}_${currentUser}`;
+            
+            const lastCheck = localStorage.getItem(lastCheckKey) || '0';
+            const events = JSON.parse(localStorage.getItem(eventKey) || '[]');
+            
+            const newEvents = events.filter(event => 
+                event.timestamp > parseInt(lastCheck) && 
+                event.from !== currentUser
+            );
+            
+            newEvents.forEach(event => {
+                handleSessionEvent(event);
+            });
+            
+            if (newEvents.length > 0) {
+                localStorage.setItem(lastCheckKey, Date.now().toString());
+            }
+        }
+        
+        function handleSessionEvent(event) {
+            switch (event.type) {
+                case 'user_joined':
+                    addMessage(`🎉 ${event.data.user} joined the session!`, 'system');
+                    break;
+                case 'decision_started':
+                    if (event.data.initiator !== currentUser) {
+                        addMessage(`📋 ${event.data.initiator} started a ${event.data.type} decision: ${event.data.context}`, 'system');
+                        // Show notification for other users
+                        setTimeout(() => {
+                            if (!awaitingUserResponse) {
+                                addNotificationMessage();
+                                const notifText = document.getElementById('notificationText');
+                                if (notifText) {
+                                    notifText.textContent = event.data.invitationText;
+                                }
+                            }
+                        }, 1000);
+                    }
+                    break;
+                case 'response_submitted':
+                    if (event.data.user !== currentUser) {
+                        let message = event.data.participating 
+                            ? `✅ ${event.data.user} is participating!`
+                            : `❌ ${event.data.user} can't make it`;
+                        addMessage(message, 'system');
+                        
+                        // Update responses
+                        responses[event.data.user] = event.data.response;
+                        
+                        // Check if all responses collected
+                        checkAllResponsesCollected();
+                    }
+                    break;
+                case 'session_reset':
+                    if (event.data.initiator !== currentUser) {
+                        addMessage('🔄 Session has been reset by ' + event.data.initiator, 'system');
+                        resetSession();
+                    }
+                    break;
+            }
+        }
+        
+        function checkAllResponsesCollected() {
+            const totalUsers = allUsers.length;
+            const responseCount = Object.keys(responses).length;
+            
+            if (responseCount >= totalUsers && sessionActive) {
+                setTimeout(() => {
+                    generateRestaurantRecommendation();
+                }, 2000);
+            }
+        }
+
         // Initialize app
         function init() {
+            loadSessions();
+            
             // Check for URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const userParam = urlParams.get('user');
@@ -833,8 +1029,15 @@
                 
                 // Check if it's a valid user
                 if (allUsers.includes(normalizedUser)) {
+                    // Get or create session for this user
+                    currentSessionId = getOrCreateSession(normalizedUser);
+                    loadSessionState(currentSessionId);
+                    
                     // Auto-select the user and skip popup
                     selectUser(normalizedUser);
+                    
+                    // Start listening for session events
+                    setInterval(listenForSessionEvents, 2000);
                     return;
                 }
             }
@@ -848,10 +1051,21 @@
             currentUser = selectedUser;
             friends = allUsers.filter(user => user !== selectedUser);
             
+            // Get or create session if not already set
+            if (!currentSessionId) {
+                currentSessionId = getOrCreateSession(selectedUser);
+                loadSessionState(currentSessionId);
+                // Start listening for session events
+                setInterval(listenForSessionEvents, 2000);
+            }
+            
             // Update URL to reflect selected user
             const url = new URL(window.location);
             url.searchParams.set('user', selectedUser.toLowerCase());
             window.history.replaceState({}, '', url);
+            
+            // Broadcast user joined event
+            broadcastToSession(currentSessionId, 'user_joined', { user: selectedUser });
             
             // Update UI
             userSelector.style.display = 'none';
@@ -913,9 +1127,19 @@
                 friendsList.appendChild(friendDiv);
             });
             
-            // Clear chat and add welcome message
-            chatMessages.innerHTML = '';
-            addMessage(`Welcome ${selectedUser}! Choose a decision type to start planning with your friends.`, 'system');
+            // Clear chat and add welcome message (only if not resuming a session)
+            if (!sessionStarted) {
+                chatMessages.innerHTML = '';
+                addMessage(`Welcome ${selectedUser}! Choose a decision type to start planning with your friends.`, 'system');
+            }
+            
+            // Update session ID display
+            if (sessionIdElement && currentSessionId) {
+                sessionIdElement.textContent = `Session: ${currentSessionId.slice(-8)}`;
+            }
+            
+            // Save updated session state
+            saveSession();
         }
 
         function addMessage(text, type = 'bot', delay = 0) {
@@ -1202,6 +1426,9 @@
             // Update session status
             sessionStatus.textContent = 'Active Session';
             sessionStatus.className = 'status-badge status-active';
+            
+            // Save session state
+            saveSession();
 
             // Add initial messages
             let contextMessage = '';
@@ -1219,6 +1446,27 @@
             
             addMessage(`🎉 ${currentUser} started a decision session!`, 'system');
             addMessage(`📋 ${contextMessage}`, 'system');
+
+            // Broadcast decision started event
+            let invitationText = '';
+            switch(currentDecisionType) {
+                case 'meal':
+                    invitationText = `${currentUser} is planning a ${decisionContext.mealType} for ${decisionContext.time}. ${decisionContext.details}. Are you interested in joining?`;
+                    break;
+                case 'movie':
+                    invitationText = `${currentUser} wants to watch a movie ${decisionContext.time} at ${decisionContext.location}. Looking for: ${decisionContext.preferences}. Want to join?`;
+                    break;
+                case 'hike':
+                    invitationText = `${currentUser} is organizing a ${decisionContext.difficulty} hike for ${decisionContext.time}. Looking for: ${decisionContext.preferences}. Are you in?`;
+                    break;
+            }
+            
+            broadcastToSession(currentSessionId, 'decision_started', {
+                initiator: currentUser,
+                type: currentDecisionType,
+                context: contextMessage,
+                invitationText: invitationText
+            });
 
             showTypingIndicator();
             setTimeout(() => {
@@ -1249,7 +1497,7 @@
                     break;
             }
 
-            // Show notification in chat
+            // Show notification in chat for the session initiator
             setTimeout(() => {
                 addNotificationMessage();
                 // Update the notification text
@@ -1258,11 +1506,6 @@
                     notifText.textContent = notificationContent;
                 }
             }, 2000);
-
-            // Simulate friend responses
-            setTimeout(() => {
-                simulateFriendResponses();
-            }, 3000);
         }
 
         function respondToInvitation(accepted) {
@@ -1293,6 +1536,15 @@
                         acceptMessage = '✅ I\'m in! Happy to contribute to the group decision.';
                 }
                 addMessage(acceptMessage, 'user');
+                
+                // Store response and broadcast
+                responses[currentUser] = { participating: true };
+                broadcastToSession(currentSessionId, 'response_submitted', {
+                    user: currentUser,
+                    participating: true,
+                    response: responses[currentUser]
+                });
+                saveSession();
 
                 showTypingIndicator();
                 setTimeout(() => {
@@ -1335,6 +1587,14 @@
                 }
                 addMessage(declineMessage, 'user');
                 responses[currentUser] = { participating: false };
+                
+                // Broadcast decline response
+                broadcastToSession(currentSessionId, 'response_submitted', {
+                    user: currentUser,
+                    participating: false,
+                    response: responses[currentUser]
+                });
+                saveSession();
 
                 showTypingIndicator();
                 setTimeout(() => {
@@ -1416,6 +1676,14 @@
                 participating: true,
                 ...userPrefs
             };
+            
+            // Broadcast preferences
+            broadcastToSession(currentSessionId, 'response_submitted', {
+                user: currentUser,
+                participating: true,
+                response: responses[currentUser]
+            });
+            saveSession();
 
             if (Object.values(userPrefs).every(val => !val)) {
                 summary = '✨ No specific requirements - I\'m flexible!';
@@ -1447,6 +1715,14 @@
                 constraints: '',
                 preferences: ''
             };
+            
+            // Broadcast skip response
+            broadcastToSession(currentSessionId, 'response_submitted', {
+                user: currentUser,
+                participating: true,
+                response: responses[currentUser]
+            });
+            saveSession();
 
             addMessage('⏭️ No specific input - I\'m flexible with the group!', 'user');
 
@@ -1457,99 +1733,6 @@
             }, 1500);
         }
 
-        function simulateFriendResponses() {
-            let friendResponses = [];
-            
-            switch(currentDecisionType) {
-                case 'meal':
-                    friendResponses = [
-                        { name: 'Oto', delay: 2000, participating: true, restrictions: 'shellfish allergy', cuisine: 'Italian, Asian', budget: '$$' },
-                        { name: 'Tanishqa', delay: 4000, participating: true, restrictions: 'vegetarian', cuisine: 'Mediterranean', budget: 'doesn\'t matter' },
-                        { name: 'Karthik', delay: 6000, participating: false },
-                        { name: 'Bharath', delay: 8000, participating: true, restrictions: 'gluten-free', cuisine: 'anything good', budget: '$-$$' }
-                    ];
-                    break;
-                case 'movie':
-                    friendResponses = [
-                        { name: 'Oto', delay: 2000, participating: true, genre: 'comedy, action', length: 'under 2.5 hours', suggestions: 'recent releases' },
-                        { name: 'Tanishqa', delay: 4000, participating: true, genre: 'drama, thriller', length: 'doesn\'t matter', suggestions: 'award winners' },
-                        { name: 'Karthik', delay: 6000, participating: false },
-                        { name: 'Bharath', delay: 8000, participating: true, genre: 'sci-fi, adventure', length: 'any', suggestions: 'Marvel or DC' }
-                    ];
-                    break;
-                case 'hike':
-                    friendResponses = [
-                        { name: 'Oto', delay: 2000, participating: true, fitness: 'intermediate', distance: '5-8 miles', features: 'views, not too steep' },
-                        { name: 'Tanishqa', delay: 4000, participating: true, fitness: 'beginner', distance: 'under 5 miles', features: 'waterfalls, shade' },
-                        { name: 'Karthik', delay: 6000, participating: false },
-                        { name: 'Bharath', delay: 8000, participating: true, fitness: 'expert', distance: 'any', features: 'challenging, scenic' }
-                    ];
-                    break;
-            }
-
-            friendResponses.forEach(response => {
-                setTimeout(() => {
-                    // Update friend status
-                    const friendItem = document.querySelector(`[data-friend="${response.name.toLowerCase()}"]`);
-                    if (friendItem) {
-                        const statusIndicator = friendItem.querySelector('.status-indicator');
-                        const statusText = friendItem.querySelector('.friend-status');
-
-                        if (response.participating) {
-                            statusIndicator.className = 'status-indicator status-online';
-                            statusText.textContent = 'Joined session';
-                        } else {
-                            statusIndicator.className = 'status-indicator status-away';
-                            statusText.textContent = 'Declined';
-                        }
-                    }
-
-                    // Add response message
-                    if (response.participating) {
-                        let joinMessage = '';
-                        switch(currentDecisionType) {
-                            case 'meal':
-                                joinMessage = `${response.name} is joining the ${decisionContext.mealType.toLowerCase()}! 🍽️`;
-                                break;
-                            case 'movie':
-                                joinMessage = `${response.name} is in for movie night! 🎬`;
-                                break;
-                            case 'hike':
-                                joinMessage = `${response.name} is joining the hike! 🥾`;
-                                break;
-                            default:
-                                joinMessage = `${response.name} joined the session! 🎉`;
-                        }
-                        addMessage(joinMessage, 'system');
-                        responses[response.name] = response;
-                    } else {
-                        let declineMessage = '';
-                        switch(currentDecisionType) {
-                            case 'meal':
-                                declineMessage = `${response.name} can't make it to the ${decisionContext.mealType.toLowerCase()} 😔`;
-                                break;
-                            case 'movie':
-                                declineMessage = `${response.name} can't join movie night 😔`;
-                                break;
-                            case 'hike':
-                                declineMessage = `${response.name} can't make it to the hike 😔`;
-                                break;
-                            default:
-                                declineMessage = `${response.name} can't make it this time 😔`;
-                        }
-                        addMessage(declineMessage, 'system');
-                        responses[response.name] = { participating: false };
-                    }
-
-                    // Check if this is the last response
-                    if (Object.keys(responses).length === friends.length + 1) { // +1 for current user
-                        setTimeout(() => {
-                            generateRestaurantRecommendation();
-                        }, 2000);
-                    }
-                }, response.delay);
-            });
-        }
 
         function generateRestaurantRecommendation() {
             const participants = Object.entries(responses).filter(([name, data]) => data.participating);
@@ -1688,6 +1871,12 @@
             decisionTypes.style.display = 'block';
             sessionStatus.textContent = 'Ready to Start';
             sessionStatus.className = 'status-badge status-waiting';
+            
+            // Broadcast reset event
+            broadcastToSession(currentSessionId, 'session_reset', {
+                initiator: currentUser
+            });
+            saveSession();
 
             addMessage('🎉 Session completed! Ready for your next group decision.', 'system');
         }
