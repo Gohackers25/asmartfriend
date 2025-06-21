@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MealMate - Group Dining Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .app-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+
+        .app-subtitle {
+            font-size: 14px;
+            color: #bdc3c7;
+        }
+
+        .friends-section {
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #ecf0f1;
+        }
+
+        .friend-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .friend-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .status-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .status-online {
+            background: #2ecc71;
+        }
+
+        .status-away {
+            background: #f39c12;
+        }
+
+        .status-pending {
+            background: #e74c3c;
+        }
+
+        .friend-info {
+            flex: 1;
+        }
+
+        .friend-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .friend-status {
+            font-size: 12px;
+            color: #bdc3c7;
+        }
+
+        .start-session-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .start-session-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .start-session-btn:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+        }
+
+        .chat-header {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .session-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .session-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .session-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            position: relative;
+            animation: slideIn 0.3s ease;
+            line-height: 1.5;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-bot {
+            align-self: flex-start;
+            background: white;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .message-system {
+            align-self: center;
+            background: #e8f5e8;
+            color: #2d5a2d;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .message-notification {
+            align-self: flex-start;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            max-width: 90%;
+        }
+
+        .notification-content {
+            margin-bottom: 15px;
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .notification-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .response-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .response-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .response-btn.yes {
+            background: rgba(255, 255, 255, 0.9);
+            color: #2ecc71;
+        }
+
+        .response-btn.yes:hover {
+            background: white;
+            transform: translateY(-1px);
+        }
+
+        .response-btn.no {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .response-btn.no:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .preference-form {
+            background: white;
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            align-self: flex-start;
+            max-width: 90%;
+            animation: slideIn 0.3s ease;
+        }
+
+        .form-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .form-icon {
+            width: 40px;
+            height: 40px;
+            background: #3498db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .form-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .form-description {
+            color: #5a6c7d;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #5a6c7d;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+            transform: translateY(-1px);
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 18px;
+            max-width: 80px;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+            align-self: flex-start;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #bdc3c7;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 200px;
+            }
+
+            .message {
+                max-width: 95%;
+            }
+
+            .preference-form {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="app-header">
+                <div class="app-title">🍽️ MealMate</div>
+                <div class="app-subtitle">Group Dining Made Easy</div>
+            </div>
+
+            <div class="friends-section">
+                <h3 class="section-title">Friends</h3>
+                <div class="friends-list">
+                    <div class="friend-item" data-friend="oto">
+                        <div class="avatar">
+                            <img src="assets/Oto.heic" alt="Oto">
+                            <div class="status-indicator status-online"></div>
+                        </div>
+                        <div class="friend-info">
+                            <div class="friend-name">Oto</div>
+                            <div class="friend-status">Online</div>
+                        </div>
+                    </div>
+
+                    <div class="friend-item" data-friend="tanishqa">
+                        <div class="avatar">
+                            <img src="assets/Tanishqa.heic" alt="Tanishqa">
+                            <div class="status-indicator status-online"></div>
+                        </div>
+                        <div class="friend-info">
+                            <div class="friend-name">Tanishqa</div>
+                            <div class="friend-status">Online</div>
+                        </div>
+                    </div>
+
+                    <div class="friend-item" data-friend="karthik">
+                        <div class="avatar">
+                            <img src="assets/Karthik.heic" alt="Karthik">
+                            <div class="status-indicator status-away"></div>
+                        </div>
+                        <div class="friend-info">
+                            <div class="friend-name">Karthik</div>
+                            <div class="friend-status">Away</div>
+                        </div>
+                    </div>
+
+                    <div class="friend-item" data-friend="bharath">
+                        <div class="avatar">
+                            <img src="assets/Bharath.heic" alt="Bharath">
+                            <div class="status-indicator status-online"></div>
+                        </div>
+                        <div class="friend-info">
+                            <div class="friend-name">Bharath</div>
+                            <div class="friend-status">Online</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="start-session-btn" id="startSessionBtn">
+                🚀 Start Meal Planning Session
+            </button>
+        </div>
+
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="session-info">
+                    <div class="session-title">Meal Planning Chat</div>
+                    <div class="session-status">
+                        <div class="status-badge status-waiting" id="sessionStatus">Ready to Start</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message message-system">
+                    Welcome to MealMate! Start a session to plan your next group meal.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // App state
+        let sessionActive = false;
+        let currentUser = 'You';
+        let friends = ['Oto', 'Tanishqa', 'Karthik', 'Bharath'];
+        let responses = {};
+        let sessionStarted = false;
+        let awaitingUserResponse = false;
+
+        // DOM elements
+        const startSessionBtn = document.getElementById('startSessionBtn');
+        const chatMessages = document.getElementById('chatMessages');
+        const sessionStatus = document.getElementById('sessionStatus');
+
+        // Initialize app
+        function init() {
+            startSessionBtn.addEventListener('click', startMealSession);
+
+            // Simulate random friend activity
+            setInterval(updateFriendStatus, 5000);
+        }
+
+        function addMessage(text, type = 'bot', delay = 0) {
+            setTimeout(() => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message message-${type}`;
+                messageDiv.innerHTML = text;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, delay);
+        }
+
+        function addNotificationMessage(delay = 0) {
+            setTimeout(() => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message message-notification';
+                messageDiv.innerHTML = `
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-icon">🍽️</div>
+                            <div class="notification-title">Meal Planning Invitation</div>
+                        </div>
+                        <div>You've been invited to join a meal planning session! Are you interested in joining for a group meal?</div>
+                    </div>
+                    <div class="response-buttons">
+                        <button class="response-btn yes" onclick="respondToInvitation(true)">I'm In! 🙋‍♀️</button>
+                        <button class="response-btn no" onclick="respondToInvitation(false)">Not This Time 😔</button>
+                    </div>
+                `;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                awaitingUserResponse = true;
+            }, delay);
+        }
+
+        function addPreferencesForm(delay = 0) {
+            setTimeout(() => {
+                const formDiv = document.createElement('div');
+                formDiv.className = 'preference-form';
+                formDiv.innerHTML = `
+                    <div class="form-header">
+                        <div class="form-icon">📝</div>
+                        <div class="form-title">Your Dining Preferences</div>
+                    </div>
+                    <div class="form-description">
+                        Great! Please share your dietary preferences so I can find the perfect restaurant for everyone.
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Food Allergies</label>
+                        <input type="text" class="form-input" id="allergiesInput" placeholder="e.g., nuts, shellfish, dairy">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Dietary Restrictions</label>
+                        <input type="text" class="form-input" id="restrictionsInput" placeholder="e.g., vegetarian, gluten-free, halal">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cuisine Preferences</label>
+                        <input type="text" class="form-input" id="cuisineInput" placeholder="e.g., Italian, Thai, Mexican">
+                    </div>
+                    <div class="form-buttons">
+                        <button class="btn btn-primary" onclick="submitPreferences()">Submit Preferences</button>
+                        <button class="btn btn-secondary" onclick="skipPreferences()">Skip</button>
+                    </div>
+                `;
+                chatMessages.appendChild(formDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                awaitingUserResponse = true;
+            }, delay);
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            typingDiv.id = 'typingIndicator';
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function startMealSession() {
+            if (sessionStarted) return;
+
+            sessionStarted = true;
+            sessionActive = true;
+            startSessionBtn.disabled = true;
+            startSessionBtn.textContent = 'Session in Progress...';
+
+            // Update session status
+            sessionStatus.textContent = 'Active Session';
+            sessionStatus.className = 'status-badge status-active';
+
+            // Add initial messages
+            addMessage('🎉 Meal planning session started!', 'system');
+
+            showTypingIndicator();
+            setTimeout(() => {
+                hideTypingIndicator();
+                addMessage('Hi everyone! I\'m your MealMate assistant. I\'ll help you find the perfect restaurant for your group. Let me send notifications to all your friends to see who\'s interested in joining!', 'bot');
+
+                // Send notifications to friends
+                setTimeout(() => {
+                    sendNotificationsToFriends();
+                }, 1500);
+            }, 1000);
+        }
+
+        function sendNotificationsToFriends() {
+            addMessage('📤 Sending invitations to all friends...', 'system');
+
+            // Update friend status to pending
+            document.querySelectorAll('.friend-item').forEach(item => {
+                const statusIndicator = item.querySelector('.status-indicator');
+                const statusText = item.querySelector('.friend-status');
+                statusIndicator.className = 'status-indicator status-pending';
+                statusText.textContent = 'Invitation sent';
+            });
+
+            // Show notification in chat
+            setTimeout(() => {
+                addNotificationMessage();
+            }, 2000);
+
+            // Simulate friend responses
+            setTimeout(() => {
+                simulateFriendResponses();
+            }, 3000);
+        }
+
+        function respondToInvitation(accepted) {
+            if (!awaitingUserResponse) return;
+            awaitingUserResponse = false;
+
+            // Disable the buttons in the notification
+            const responseButtons = document.querySelectorAll('.response-btn');
+            responseButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            });
+
+            if (accepted) {
+                addMessage('✅ I\'m in! Count me in for the group meal.', 'user');
+
+                showTypingIndicator();
+                setTimeout(() => {
+                    hideTypingIndicator();
+                    addMessage('Awesome! I\'m so glad you can join us. Now I need to collect some information about your dining preferences to make sure we find a restaurant that works for everyone.', 'bot');
+
+                    setTimeout(() => {
+                        addPreferencesForm();
+                    }, 1500);
+                }, 1000);
+            } else {
+                addMessage('❌ Sorry, I can\'t make it this time.', 'user');
+                responses[currentUser] = { participating: false };
+
+                showTypingIndicator();
+                setTimeout(() => {
+                    hideTypingIndicator();
+                    addMessage('No problem at all! Maybe next time. I\'ll let you know if the group decides to plan another meal together. Thanks for letting me know! 😊', 'bot');
+                }, 1500);
+            }
+        }
+
+        function submitPreferences() {
+            if (!awaitingUserResponse) return;
+            awaitingUserResponse = false;
+
+            const allergies = document.getElementById('allergiesInput').value;
+            const restrictions = document.getElementById('restrictionsInput').value;
+            const cuisine = document.getElementById('cuisineInput').value;
+
+            // Disable the form
+            const formButtons = document.querySelectorAll('.preference-form .btn');
+            const formInputs = document.querySelectorAll('.preference-form .form-input');
+            formButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+            formInputs.forEach(input => {
+                input.disabled = true;
+                input.style.backgroundColor = '#f8f9fa';
+            });
+
+            // Store user preferences
+            responses[currentUser] = {
+                participating: true,
+                allergies: allergies,
+                restrictions: restrictions,
+                cuisine: cuisine
+            };
+
+            // Create a summary of what was submitted
+            let summary = '📝 Here are my preferences:\n';
+            if (allergies) summary += `🚫 Allergies: ${allergies}\n`;
+            if (restrictions) summary += `🥗 Dietary restrictions: ${restrictions}\n`;
+            if (cuisine) summary += `🍽️ Preferred cuisines: ${cuisine}\n`;
+            if (!allergies && !restrictions && !cuisine) summary += '✨ No specific requirements - I\'m flexible!';
+
+            addMessage(summary, 'user');
+
+            showTypingIndicator();
+            setTimeout(() => {
+                hideTypingIndicator();
+                addMessage('Perfect! I\'ve received your preferences. I\'ll analyze everyone\'s dietary needs and cuisine preferences once I hear back from all your friends. This helps me find restaurants that work for everyone! 🎯', 'bot');
+            }, 1500);
+        }
+
+        function skipPreferences() {
+            if (!awaitingUserResponse) return;
+            awaitingUserResponse = false;
+
+            // Disable the form
+            const formButtons = document.querySelectorAll('.preference-form .btn');
+            formButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+
+            responses[currentUser] = {
+                participating: true,
+                allergies: '',
+                restrictions: '',
+                cuisine: ''
+            };
+
+            addMessage('⏭️ No specific preferences - I\'m open to anything!', 'user');
+
+            showTypingIndicator();
+            setTimeout(() => {
+                hideTypingIndicator();
+                addMessage('Got it! Flexibility is great - that gives us lots of options. I\'ll still make sure to find excellent restaurants that work for everyone in the group. 😊', 'bot');
+            }, 1500);
+        }
+
+        function simulateFriendResponses() {
+            const friendResponses = [
+                { name: 'Oto', delay: 2000, participating: true, allergies: 'shellfish', restrictions: '', cuisine: 'Italian, Asian' },
+                { name: 'Tanishqa', delay: 4000, participating: true, allergies: '', restrictions: 'vegetarian', cuisine: 'Mediterranean' },
+                { name: 'Karthik', delay: 6000, participating: false },
+                { name: 'Bharath', delay: 8000, participating: true, allergies: '', restrictions: 'gluten-free', cuisine: 'anything' }
+            ];
+
+            friendResponses.forEach(response => {
+                setTimeout(() => {
+                    // Update friend status
+                    const friendItem = document.querySelector(`[data-friend="${response.name.toLowerCase()}"]`);
+                    if (friendItem) {
+                        const statusIndicator = friendItem.querySelector('.status-indicator');
+                        const statusText = friendItem.querySelector('.friend-status');
+
+                        if (response.participating) {
+                            statusIndicator.className = 'status-indicator status-online';
+                            statusText.textContent = 'Joined session';
+                        } else {
+                            statusIndicator.className = 'status-indicator status-away';
+                            statusText.textContent = 'Declined';
+                        }
+                    }
+
+                    // Add response message
+                    if (response.participating) {
+                        addMessage(`${response.name} joined the session! 🎉`, 'system');
+                        responses[response.name] = response;
+                    } else {
+                        addMessage(`${response.name} can't make it this time 😔`, 'system');
+                        responses[response.name] = { participating: false };
+                    }
+
+                    // Check if this is the last response
+                    if (Object.keys(responses).length === friends.length + 1) { // +1 for current user
+                        setTimeout(() => {
+                            generateRestaurantRecommendation();
+                        }, 2000);
+                    }
+                }, response.delay);
+            });
+        }
+
+        function generateRestaurantRecommendation() {
+            const participants = Object.entries(responses).filter(([name, data]) => data.participating);
+
+            showTypingIndicator();
+            setTimeout(() => {
+                hideTypingIndicator();
+
+                if (participants.length < 2) {
+                    addMessage('It looks like not enough people can make it this time. I\'ll help you plan again when more friends are available! 🤗', 'bot');
+                    setTimeout(() => {
+                        resetSession();
+                    }, 3000);
+                    return;
+                }
+
+                addMessage(`Excellent! I have responses from everyone. Let me analyze the preferences from ${participants.length} participants and find the perfect restaurant... 🔍`, 'bot');
+
+                showTypingIndicator();
+                setTimeout(() => {
+                    hideTypingIndicator();
+
+                    // Analyze preferences
+                    const allergies = participants.map(p => p[1].allergies).filter(a => a).join(', ');
+                    const restrictions = participants.map(p => p[1].restrictions).filter(r => r).join(', ');
+                    const cuisines = participants.map(p => p[1].cuisine).filter(c => c).join(', ');
+
+                    addMessage(`📊 <strong>Group Analysis Complete!</strong><br><br>
+                    🚫 <strong>Allergies to avoid:</strong> ${allergies || 'None reported'}<br>
+                    🥗 <strong>Dietary restrictions:</strong> ${restrictions || 'None reported'}<br>
+                    🍽️ <strong>Preferred cuisines:</strong> ${cuisines || 'Open to anything'}`, 'bot');
+
+                    setTimeout(() => {
+                        showTypingIndicator();
+                        setTimeout(() => {
+                            hideTypingIndicator();
+                            addMessage(`🎯 <strong>Perfect Match Found!</strong><br><br>
+                            <strong>🏆 Olive & Thyme</strong><br>
+                            📍 Mediterranean Bistro - Downtown<br>
+                            ⭐ 4.8/5 stars (1,247 reviews)<br>
+                            💰 $$ - Moderate pricing<br>
+                            🕒 Available today 6:30 PM - 9:00 PM<br><br>
+                            
+                            <strong>✅ Why it's perfect for your group:</strong><br>
+                            • Accommodates all dietary restrictions<br>
+                            • Shellfish-free kitchen available<br>
+                            • Extensive vegetarian & gluten-free menu<br>
+                            • Great Mediterranean cuisine as requested<br><br>
+                            
+                            Shall I make a reservation for <strong>${participants.length} people</strong>? 🍽️`, 'bot');
+
+                            // Reset session
+                            setTimeout(() => {
+                                resetSession();
+                            }, 5000);
+                        }, 3000);
+                    }, 2000);
+                }, 2500);
+            }, 1500);
+        }
+
+        function resetSession() {
+            sessionActive = false;
+            sessionStarted = false;
+            responses = {};
+            awaitingUserResponse = false;
+
+            startSessionBtn.disabled = false;
+            startSessionBtn.textContent = '🚀 Start New Meal Session';
+
+            sessionStatus.textContent = 'Ready to Start';
+            sessionStatus.className = 'status-badge status-waiting';
+
+            // Reset friend statuses
+            document.querySelectorAll('.friend-item').forEach(item => {
+                const statusIndicator = item.querySelector('.status-indicator');
+                const statusText = item.querySelector('.friend-status');
+                statusIndicator.className = 'status-indicator status-online';
+                statusText.textContent = 'Online';
+            });
+
+            addMessage('🎉 Session completed! Ready for your next meal planning adventure.', 'system');
+        }
+
+        function updateFriendStatus() {
+            if (!sessionActive) {
+                // Randomly update friend statuses when not in session
+                const friendItems = document.querySelectorAll('.friend-item');
+                friendItems.forEach(item => {
+                    if (Math.random() < 0.1) { // 10% chance to update
+                        const statusIndicator = item.querySelector('.status-indicator');
+                        const statusText = item.querySelector('.friend-status');
+                        const statuses = [
+                            { class: 'status-online', text: 'Online' },
+                            { class: 'status-away', text: 'Away' }
+                        ];
+                        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                        statusIndicator.className = `status-indicator ${randomStatus.class}`;
+                        statusText.textContent = randomStatus.text;
+                    }
+                });
+            }
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+
+</html>
