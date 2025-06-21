@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MealMate - Group Dining Chat</title>
+    <title>DecideTogether - Group Decision Making</title>
     <style>
         * {
             margin: 0;
@@ -87,12 +87,37 @@
             margin-right: 12px;
             position: relative;
             overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
         }
 
         .avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        .avatar-initial {
+            display: block;
+            z-index: 0;
+        }
+        
+        .avatar img[style*="display: none"] ~ .avatar-initial,
+        .avatar img:not([src]) ~ .avatar-initial {
+            display: block;
+        }
+        
+        .avatar img:not([style*="display: none"]) ~ .avatar-initial {
+            display: none;
         }
 
         .status-indicator {
@@ -131,25 +156,80 @@
             color: #bdc3c7;
         }
 
-        .start-session-btn {
+        .user-profile {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .user-avatar .avatar-initial {
+            z-index: 0;
+        }
+
+        .user-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .user-label {
+            font-size: 12px;
+            color: #bdc3c7;
+        }
+
+        .decision-type-btn {
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
             border: none;
             padding: 15px 20px;
             border-radius: 25px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 20px;
+            margin-bottom: 10px;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .start-session-btn:hover {
+        .decision-type-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
         }
 
-        .start-session-btn:disabled {
+        .decision-type-btn:disabled {
             background: #7f8c8d;
             cursor: not-allowed;
             transform: none;
@@ -480,6 +560,127 @@
             }
         }
 
+        .decision-context-form {
+            background: white;
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            align-self: flex-start;
+            max-width: 90%;
+            animation: slideIn 0.3s ease;
+        }
+
+        .context-form-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .context-form-icon {
+            width: 40px;
+            height: 40px;
+            background: #3498db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: white;
+            font-size: 20px;
+        }
+
+        .context-form-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .user-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .user-selector-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .user-selector-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .user-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .user-option {
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-option:hover {
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+        }
+
+        .user-option-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-option-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .user-option-avatar .avatar-initial {
+            z-index: 0;
+        }
+
+        .user-option-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
         .hidden {
             display: none;
         }
@@ -509,68 +710,44 @@
     <div class="container">
         <div class="sidebar">
             <div class="app-header">
-                <div class="app-title">🍽️ MealMate</div>
-                <div class="app-subtitle">Group Dining Made Easy</div>
+                <div class="app-title">🤝 DecideTogether</div>
+                <div class="app-subtitle">Smart Group Decisions</div>
+            </div>
+
+            <div class="user-profile" id="userProfile" style="display: none;">
+                <div class="user-avatar" id="userAvatar">
+                    <span class="avatar-initial" id="userInitial">O</span>
+                    <img id="userImage" src="" alt="" onerror="this.style.display='none';" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
+                </div>
+                <div class="user-name" id="userName">Oto</div>
+                <div class="user-label">Logged in as</div>
             </div>
 
             <div class="friends-section">
-                <h3 class="section-title">Friends</h3>
-                <div class="friends-list">
-                    <div class="friend-item" data-friend="oto">
-                        <div class="avatar">
-                            <img src="assets/Oto.heic" alt="Oto">
-                            <div class="status-indicator status-online"></div>
-                        </div>
-                        <div class="friend-info">
-                            <div class="friend-name">Oto</div>
-                            <div class="friend-status">Online</div>
-                        </div>
-                    </div>
-
-                    <div class="friend-item" data-friend="tanishqa">
-                        <div class="avatar">
-                            <img src="assets/Tanishqa.heic" alt="Tanishqa">
-                            <div class="status-indicator status-online"></div>
-                        </div>
-                        <div class="friend-info">
-                            <div class="friend-name">Tanishqa</div>
-                            <div class="friend-status">Online</div>
-                        </div>
-                    </div>
-
-                    <div class="friend-item" data-friend="karthik">
-                        <div class="avatar">
-                            <img src="assets/Karthik.heic" alt="Karthik">
-                            <div class="status-indicator status-away"></div>
-                        </div>
-                        <div class="friend-info">
-                            <div class="friend-name">Karthik</div>
-                            <div class="friend-status">Away</div>
-                        </div>
-                    </div>
-
-                    <div class="friend-item" data-friend="bharath">
-                        <div class="avatar">
-                            <img src="assets/Bharath.heic" alt="Bharath">
-                            <div class="status-indicator status-online"></div>
-                        </div>
-                        <div class="friend-info">
-                            <div class="friend-name">Bharath</div>
-                            <div class="friend-status">Online</div>
-                        </div>
-                    </div>
+                <h3 class="section-title">Your Friends</h3>
+                <div class="friends-list" id="friendsList">
+                    <!-- Friends will be populated dynamically -->
                 </div>
             </div>
 
-            <button class="start-session-btn" id="startSessionBtn">
-                🚀 Start Meal Planning Session
-            </button>
+            <div class="decision-types" id="decisionTypes" style="display: none;">
+                <h3 class="section-title">Start a Decision</h3>
+                <button class="decision-type-btn" onclick="startDecision('meal')">
+                    🍽️ Plan a Meal Together
+                </button>
+                <button class="decision-type-btn" onclick="startDecision('movie')">
+                    🎬 Choose a Movie to Watch
+                </button>
+                <button class="decision-type-btn" onclick="startDecision('hike')">
+                    🥾 Pick a Hike to Do
+                </button>
+            </div>
         </div>
 
         <div class="chat-area">
             <div class="chat-header">
                 <div class="session-info">
-                    <div class="session-title">Meal Planning Chat</div>
+                    <div class="session-title">Group Decision Chat</div>
                     <div class="session-status">
                         <div class="status-badge status-waiting" id="sessionStatus">Ready to Start</div>
                     </div>
@@ -579,7 +756,44 @@
 
             <div class="chat-messages" id="chatMessages">
                 <div class="message message-system">
-                    Welcome to MealMate! Start a session to plan your next group meal.
+                    Welcome to DecideTogether! Please select who you are to get started.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Selector Modal -->
+    <div class="user-selector" id="userSelector">
+        <div class="user-selector-content">
+            <h2 class="user-selector-title">Who are you?</h2>
+            <div class="user-options">
+                <div class="user-option" onclick="selectUser('Oto')">
+                    <div class="user-option-avatar">
+                        <span class="avatar-initial">O</span>
+                        <img src="assets/Oto.png" alt="Oto" onerror="this.style.display='none';">
+                    </div>
+                    <div class="user-option-name">Oto</div>
+                </div>
+                <div class="user-option" onclick="selectUser('Tanishqa')">
+                    <div class="user-option-avatar">
+                        <span class="avatar-initial">T</span>
+                        <img src="assets/Tanishqa.png" alt="Tanishqa" onerror="this.style.display='none';">
+                    </div>
+                    <div class="user-option-name">Tanishqa</div>
+                </div>
+                <div class="user-option" onclick="selectUser('Karthik')">
+                    <div class="user-option-avatar">
+                        <span class="avatar-initial">K</span>
+                        <img src="assets/Karthick.png" alt="Karthik" onerror="this.style.display='none';">
+                    </div>
+                    <div class="user-option-name">Karthik</div>
+                </div>
+                <div class="user-option" onclick="selectUser('Bharath')">
+                    <div class="user-option-avatar">
+                        <span class="avatar-initial">B</span>
+                        <img src="assets/Bharath.png" alt="Bharath" onerror="this.style.display='none';">
+                    </div>
+                    <div class="user-option-name">Bharath</div>
                 </div>
             </div>
         </div>
@@ -588,23 +802,97 @@
     <script>
         // App state
         let sessionActive = false;
-        let currentUser = 'You';
-        let friends = ['Oto', 'Tanishqa', 'Karthik', 'Bharath'];
+        let currentUser = null;
+        let allUsers = ['Oto', 'Tanishqa', 'Karthik', 'Bharath'];
+        let friends = [];
         let responses = {};
         let sessionStarted = false;
         let awaitingUserResponse = false;
+        let currentDecisionType = null;
+        let decisionContext = {};
 
         // DOM elements
-        const startSessionBtn = document.getElementById('startSessionBtn');
         const chatMessages = document.getElementById('chatMessages');
         const sessionStatus = document.getElementById('sessionStatus');
+        const userSelector = document.getElementById('userSelector');
+        const userProfile = document.getElementById('userProfile');
+        const userName = document.getElementById('userName');
+        const userAvatar = document.getElementById('userAvatar');
+        const friendsList = document.getElementById('friendsList');
+        const decisionTypes = document.getElementById('decisionTypes');
 
         // Initialize app
         function init() {
-            startSessionBtn.addEventListener('click', startMealSession);
+            // App is initialized, waiting for user selection
+        }
 
-            // Simulate random friend activity
-            setInterval(updateFriendStatus, 5000);
+        function selectUser(selectedUser) {
+            currentUser = selectedUser;
+            friends = allUsers.filter(user => user !== selectedUser);
+            
+            // Update UI
+            userSelector.style.display = 'none';
+            userProfile.style.display = 'block';
+            userName.textContent = selectedUser;
+            
+            // Set user avatar and image
+            const userInitial = document.getElementById('userInitial');
+            const userImage = document.getElementById('userImage');
+            
+            if (userInitial && userImage) {
+                userInitial.textContent = selectedUser.charAt(0);
+                
+                // Handle special case for Karthik vs Karthick filename
+                let imageName = selectedUser;
+                if (selectedUser === 'Karthik') {
+                    imageName = 'Karthick';
+                }
+                
+                userImage.src = `assets/${imageName}.png`;
+                userImage.alt = selectedUser;
+                
+                // Ensure image is visible on load
+                userImage.style.display = 'block';
+                userImage.onload = function() {
+                    console.log(`User image loaded for ${selectedUser}`);
+                };
+                userImage.onerror = function() {
+                    console.log(`User image failed to load for ${selectedUser}, showing initial instead`);
+                    this.style.display = 'none';
+                };
+            } else {
+                console.error('User avatar elements not found');
+            }
+            
+            decisionTypes.style.display = 'block';
+            
+            // Populate friends list
+            friendsList.innerHTML = '';
+            friends.forEach(friend => {
+                const friendDiv = document.createElement('div');
+                friendDiv.className = 'friend-item';
+                
+                // Handle special case for Karthik vs Karthick filename
+                let imageName = friend;
+                if (friend === 'Karthik') {
+                    imageName = 'Karthick'; // Use the actual filename
+                }
+                
+                friendDiv.innerHTML = `
+                    <div class="avatar">
+                        <span class="avatar-initial">${friend.charAt(0)}</span>
+                        <img src="assets/${imageName}.png" alt="${friend}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    </div>
+                    <div class="friend-info">
+                        <div class="friend-name">${friend}</div>
+                    </div>
+                `;
+                friendsList.appendChild(friendDiv);
+            });
+            
+            // Clear chat and add welcome message
+            chatMessages.innerHTML = '';
+            addMessage(`Welcome ${selectedUser}! Choose a decision type to start planning with your friends.`, 'system');
         }
 
         function addMessage(text, type = 'bot', delay = 0) {
@@ -624,14 +912,14 @@
                 messageDiv.innerHTML = `
                     <div class="notification-content">
                         <div class="notification-header">
-                            <div class="notification-icon">🍽️</div>
-                            <div class="notification-title">Meal Planning Invitation</div>
+                            <div class="notification-icon">🤝</div>
+                            <div class="notification-title">Decision Session Invitation</div>
                         </div>
-                        <div>You've been invited to join a meal planning session! Are you interested in joining for a group meal?</div>
+                        <div id="notificationText">You've been invited to join a group decision session! Your input is valuable for making the best choice together.</div>
                     </div>
                     <div class="response-buttons">
-                        <button class="response-btn yes" onclick="respondToInvitation(true)">I'm In! 🙋‍♀️</button>
-                        <button class="response-btn no" onclick="respondToInvitation(false)">Not This Time 😔</button>
+                        <button class="response-btn yes" onclick="respondToInvitation(true)">Count Me In! 🙋‍♀️</button>
+                        <button class="response-btn no" onclick="respondToInvitation(false)">Can't Participate 😔</button>
                     </div>
                 `;
                 chatMessages.appendChild(messageDiv);
@@ -642,28 +930,72 @@
 
         function addPreferencesForm(delay = 0) {
             setTimeout(() => {
+                let formFields = '';
+                let formDescription = '';
+                
+                switch(currentDecisionType) {
+                    case 'meal':
+                        formDescription = 'Share your dining preferences and requirements.';
+                        formFields = `
+                            <div class="form-group">
+                                <label class="form-label">Dietary Restrictions</label>
+                                <input type="text" class="form-input" id="restrictionsInput" placeholder="e.g., vegetarian, allergies, gluten-free">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cuisine Preferences</label>
+                                <input type="text" class="form-input" id="cuisineInput" placeholder="e.g., Italian, Thai, no spicy food">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Budget Range</label>
+                                <input type="text" class="form-input" id="budgetInput" placeholder="e.g., $, $$, $$$, doesn't matter">
+                            </div>
+                        `;
+                        break;
+                    case 'movie':
+                        formDescription = 'Tell us your movie preferences for the group viewing.';
+                        formFields = `
+                            <div class="form-group">
+                                <label class="form-label">Genre Preferences</label>
+                                <input type="text" class="form-input" id="genreInput" placeholder="e.g., comedy, action, no horror">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Movie Length</label>
+                                <input type="text" class="form-input" id="lengthInput" placeholder="e.g., under 2 hours, doesn't matter">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Specific Suggestions</label>
+                                <input type="text" class="form-input" id="suggestionsInput" placeholder="e.g., recent releases, classics, specific titles">
+                            </div>
+                        `;
+                        break;
+                    case 'hike':
+                        formDescription = 'Share your hiking preferences and fitness level.';
+                        formFields = `
+                            <div class="form-group">
+                                <label class="form-label">Fitness Level</label>
+                                <input type="text" class="form-input" id="fitnessInput" placeholder="e.g., beginner, intermediate, expert">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Distance Preference</label>
+                                <input type="text" class="form-input" id="distanceInput" placeholder="e.g., under 5 miles, 5-10 miles, any">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Trail Features</label>
+                                <input type="text" class="form-input" id="featuresInput" placeholder="e.g., waterfalls, views, shade, dog-friendly">
+                            </div>
+                        `;
+                        break;
+                }
+                
                 const formDiv = document.createElement('div');
                 formDiv.className = 'preference-form';
                 formDiv.innerHTML = `
                     <div class="form-header">
                         <div class="form-icon">📝</div>
-                        <div class="form-title">Your Dining Preferences</div>
+                        <div class="form-title">Your Preferences</div>
                     </div>
-                    <div class="form-description">
-                        Great! Please share your dietary preferences so I can find the perfect restaurant for everyone.
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Food Allergies</label>
-                        <input type="text" class="form-input" id="allergiesInput" placeholder="e.g., nuts, shellfish, dairy">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Dietary Restrictions</label>
-                        <input type="text" class="form-input" id="restrictionsInput" placeholder="e.g., vegetarian, gluten-free, halal">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Cuisine Preferences</label>
-                        <input type="text" class="form-input" id="cuisineInput" placeholder="e.g., Italian, Thai, Mexican">
-                    </div>
+                    <div class="form-description">${formDescription}</div>
+                    ${formFields}
                     <div class="form-buttons">
                         <button class="btn btn-primary" onclick="submitPreferences()">Submit Preferences</button>
                         <button class="btn btn-secondary" onclick="skipPreferences()">Skip</button>
@@ -697,25 +1029,178 @@
             }
         }
 
-        function startMealSession() {
-            if (sessionStarted) return;
-
+        function startDecision(type) {
+            currentDecisionType = type;
             sessionStarted = true;
+            decisionTypes.style.display = 'none';
+            
+            // Update session status
+            sessionStatus.textContent = 'Setting up...';
+            sessionStatus.className = 'status-badge status-waiting';
+            
+            // Clear chat
+            chatMessages.innerHTML = '';
+            
+            // Show context form based on decision type
+            showTypingIndicator();
+            setTimeout(() => {
+                hideTypingIndicator();
+                
+                let formIcon, formTitle, formDescription, formFields;
+                
+                switch(type) {
+                    case 'meal':
+                        formIcon = '🍽️';
+                        formTitle = 'Plan a Meal';
+                        formDescription = 'Let\'s gather some details about the meal you want to plan.';
+                        formFields = `
+                            <div class="form-group">
+                                <label class="form-label">Type of Meal</label>
+                                <input type="text" class="form-input" id="mealType" placeholder="e.g., Lunch, Dinner, Brunch">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Day & Time</label>
+                                <input type="text" class="form-input" id="mealTime" placeholder="e.g., Saturday 7 PM">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Additional Details</label>
+                                <input type="text" class="form-input" id="mealDetails" placeholder="e.g., Birthday celebration, casual meetup">
+                            </div>
+                        `;
+                        break;
+                    case 'movie':
+                        formIcon = '🎬';
+                        formTitle = 'Choose a Movie';
+                        formDescription = 'Tell me about your movie night plans.';
+                        formFields = `
+                            <div class="form-group">
+                                <label class="form-label">When to Watch</label>
+                                <input type="text" class="form-input" id="movieTime" placeholder="e.g., Friday evening, Tonight">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Where to Watch</label>
+                                <input type="text" class="form-input" id="movieLocation" placeholder="e.g., My place, Theater, Online">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Movie Preferences</label>
+                                <input type="text" class="form-input" id="moviePrefs" placeholder="e.g., Comedy, no horror, recent releases">
+                            </div>
+                        `;
+                        break;
+                    case 'hike':
+                        formIcon = '🥾';
+                        formTitle = 'Pick a Hike';
+                        formDescription = 'Let\'s plan your group hiking adventure.';
+                        formFields = `
+                            <div class="form-group">
+                                <label class="form-label">When to Hike</label>
+                                <input type="text" class="form-input" id="hikeTime" placeholder="e.g., Sunday morning, Next weekend">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Difficulty Level</label>
+                                <input type="text" class="form-input" id="hikeDifficulty" placeholder="e.g., Easy, Moderate, Challenging">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Preferences</label>
+                                <input type="text" class="form-input" id="hikePrefs" placeholder="e.g., Waterfalls, Views, Under 5 miles">
+                            </div>
+                        `;
+                        break;
+                }
+                
+                const formDiv = document.createElement('div');
+                formDiv.className = 'decision-context-form';
+                formDiv.innerHTML = `
+                    <div class="context-form-header">
+                        <div class="context-form-icon">${formIcon}</div>
+                        <div class="context-form-title">${formTitle}</div>
+                    </div>
+                    <div class="form-description">${formDescription}</div>
+                    ${formFields}
+                    <div class="form-buttons">
+                        <button class="btn btn-primary" onclick="submitDecisionContext()">Start Planning</button>
+                        <button class="btn btn-secondary" onclick="cancelDecision()">Cancel</button>
+                    </div>
+                `;
+                chatMessages.appendChild(formDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 500);
+        }
+
+        function submitDecisionContext() {
+            // Gather context based on decision type
+            switch(currentDecisionType) {
+                case 'meal':
+                    decisionContext = {
+                        type: 'meal',
+                        mealType: document.getElementById('mealType').value || 'Dinner',
+                        time: document.getElementById('mealTime').value || 'This weekend',
+                        details: document.getElementById('mealDetails').value || 'Casual get-together'
+                    };
+                    break;
+                case 'movie':
+                    decisionContext = {
+                        type: 'movie',
+                        time: document.getElementById('movieTime').value || 'This weekend',
+                        location: document.getElementById('movieLocation').value || 'Someone\'s place',
+                        preferences: document.getElementById('moviePrefs').value || 'Open to suggestions'
+                    };
+                    break;
+                case 'hike':
+                    decisionContext = {
+                        type: 'hike',
+                        time: document.getElementById('hikeTime').value || 'This weekend',
+                        difficulty: document.getElementById('hikeDifficulty').value || 'Moderate',
+                        preferences: document.getElementById('hikePrefs').value || 'Scenic views'
+                    };
+                    break;
+            }
+            
+            // Remove form
+            const form = document.querySelector('.decision-context-form');
+            if (form) form.remove();
+            
+            // Start the session
+            startDecisionSession();
+        }
+
+        function cancelDecision() {
+            sessionStarted = false;
+            decisionTypes.style.display = 'block';
+            sessionStatus.textContent = 'Ready to Start';
+            sessionStatus.className = 'status-badge status-waiting';
+            chatMessages.innerHTML = '';
+            addMessage(`Decision cancelled. Choose a decision type when you're ready.`, 'system');
+        }
+
+        function startDecisionSession() {
             sessionActive = true;
-            startSessionBtn.disabled = true;
-            startSessionBtn.textContent = 'Session in Progress...';
 
             // Update session status
             sessionStatus.textContent = 'Active Session';
             sessionStatus.className = 'status-badge status-active';
 
             // Add initial messages
-            addMessage('🎉 Meal planning session started!', 'system');
+            let contextMessage = '';
+            switch(currentDecisionType) {
+                case 'meal':
+                    contextMessage = `Planning a ${decisionContext.mealType} for ${decisionContext.time}. ${decisionContext.details}`;
+                    break;
+                case 'movie':
+                    contextMessage = `Choosing a movie to watch ${decisionContext.time} at ${decisionContext.location}. Preferences: ${decisionContext.preferences}`;
+                    break;
+                case 'hike':
+                    contextMessage = `Planning a ${decisionContext.difficulty} hike for ${decisionContext.time}. Looking for: ${decisionContext.preferences}`;
+                    break;
+            }
+            
+            addMessage(`🎉 ${currentUser} started a decision session!`, 'system');
+            addMessage(`📋 ${contextMessage}`, 'system');
 
             showTypingIndicator();
             setTimeout(() => {
                 hideTypingIndicator();
-                addMessage('Hi everyone! I\'m your MealMate assistant. I\'ll help you find the perfect restaurant for your group. Let me send notifications to all your friends to see who\'s interested in joining!', 'bot');
+                addMessage(`Great! I'll help your group decide on the best option. Let me invite your friends and gather their input based on: ${contextMessage}`, 'bot');
 
                 // Send notifications to friends
                 setTimeout(() => {
@@ -727,17 +1212,28 @@
         function sendNotificationsToFriends() {
             addMessage('📤 Sending invitations to all friends...', 'system');
 
-            // Update friend status to pending
-            document.querySelectorAll('.friend-item').forEach(item => {
-                const statusIndicator = item.querySelector('.status-indicator');
-                const statusText = item.querySelector('.friend-status');
-                statusIndicator.className = 'status-indicator status-pending';
-                statusText.textContent = 'Invitation sent';
-            });
+            // Update notification text based on decision type
+            let notificationContent = '';
+            switch(currentDecisionType) {
+                case 'meal':
+                    notificationContent = `${currentUser} is planning a ${decisionContext.mealType} for ${decisionContext.time}. ${decisionContext.details}. Are you interested in joining?`;
+                    break;
+                case 'movie':
+                    notificationContent = `${currentUser} wants to watch a movie ${decisionContext.time} at ${decisionContext.location}. Looking for: ${decisionContext.preferences}. Want to join?`;
+                    break;
+                case 'hike':
+                    notificationContent = `${currentUser} is organizing a ${decisionContext.difficulty} hike for ${decisionContext.time}. Looking for: ${decisionContext.preferences}. Are you in?`;
+                    break;
+            }
 
             // Show notification in chat
             setTimeout(() => {
                 addNotificationMessage();
+                // Update the notification text
+                const notifText = document.getElementById('notificationText');
+                if (notifText) {
+                    notifText.textContent = notificationContent;
+                }
             }, 2000);
 
             // Simulate friend responses
@@ -759,25 +1255,83 @@
             });
 
             if (accepted) {
-                addMessage('✅ I\'m in! Count me in for the group meal.', 'user');
+                let acceptMessage = '';
+                switch(currentDecisionType) {
+                    case 'meal':
+                        acceptMessage = `✅ I'm in for the ${decisionContext.mealType.toLowerCase()}! 🍽️`;
+                        break;
+                    case 'movie':
+                        acceptMessage = '✅ Count me in for movie night! 🎬';
+                        break;
+                    case 'hike':
+                        acceptMessage = '✅ I\'m joining the hike! 🥾';
+                        break;
+                    default:
+                        acceptMessage = '✅ I\'m in! Happy to contribute to the group decision.';
+                }
+                addMessage(acceptMessage, 'user');
 
                 showTypingIndicator();
                 setTimeout(() => {
                     hideTypingIndicator();
-                    addMessage('Awesome! I\'m so glad you can join us. Now I need to collect some information about your dining preferences to make sure we find a restaurant that works for everyone.', 'bot');
+                    
+                    let botResponse = '';
+                    switch(currentDecisionType) {
+                        case 'meal':
+                            botResponse = `Great! I'm excited you can join the ${decisionContext.mealType.toLowerCase()}. Let me gather your dining preferences to find the perfect restaurant for everyone.`;
+                            break;
+                        case 'movie':
+                            botResponse = 'Awesome! Movie night will be fun. Let me collect your movie preferences to find something everyone will enjoy.';
+                            break;
+                        case 'hike':
+                            botResponse = 'Perfect! The hike will be great. Let me gather your hiking preferences to find a trail that works for everyone.';
+                            break;
+                        default:
+                            botResponse = 'Awesome! I am glad you can contribute. Let me gather your input and preferences to help the group make the best decision together.';
+                    }
+                    addMessage(botResponse, 'bot');
 
                     setTimeout(() => {
                         addPreferencesForm();
                     }, 1500);
                 }, 1000);
             } else {
-                addMessage('❌ Sorry, I can\'t make it this time.', 'user');
+                let declineMessage = '';
+                switch(currentDecisionType) {
+                    case 'meal':
+                        declineMessage = `❌ Sorry, I can't make it to the ${decisionContext.mealType.toLowerCase()}.`;
+                        break;
+                    case 'movie':
+                        declineMessage = '❌ Sorry, I can\'t join movie night.';
+                        break;
+                    case 'hike':
+                        declineMessage = '❌ Sorry, I can\'t make it to the hike.';
+                        break;
+                    default:
+                        declineMessage = '❌ Sorry, I can\'t participate in this decision.';
+                }
+                addMessage(declineMessage, 'user');
                 responses[currentUser] = { participating: false };
 
                 showTypingIndicator();
                 setTimeout(() => {
                     hideTypingIndicator();
-                    addMessage('No problem at all! Maybe next time. I\'ll let you know if the group decides to plan another meal together. Thanks for letting me know! 😊', 'bot');
+                    
+                    let botDeclineResponse = '';
+                    switch(currentDecisionType) {
+                        case 'meal':
+                            botDeclineResponse = `No worries! I'll let you know what restaurant the group decides on for the ${decisionContext.mealType.toLowerCase()}. Maybe next time! 😊`;
+                            break;
+                        case 'movie':
+                            botDeclineResponse = 'No problem! I will let you know what movie the group picks. Hope you can join the next movie night! 😊';
+                            break;
+                        case 'hike':
+                            botDeclineResponse = 'That is okay! I will share which trail the group chooses. Hope you can join the next hiking adventure! 😊';
+                            break;
+                        default:
+                            botDeclineResponse = 'No problem at all! I will let you know the outcome of the group decision. Thanks for letting me know! 😊';
+                    }
+                    addMessage(botDeclineResponse, 'bot');
                 }, 1500);
             }
         }
@@ -786,9 +1340,41 @@
             if (!awaitingUserResponse) return;
             awaitingUserResponse = false;
 
-            const allergies = document.getElementById('allergiesInput').value;
-            const restrictions = document.getElementById('restrictionsInput').value;
-            const cuisine = document.getElementById('cuisineInput').value;
+            let userPrefs = {};
+            let summary = '📝 Here\'s my input:\n';
+            
+            switch(currentDecisionType) {
+                case 'meal':
+                    userPrefs = {
+                        restrictions: document.getElementById('restrictionsInput').value,
+                        cuisine: document.getElementById('cuisineInput').value,
+                        budget: document.getElementById('budgetInput').value
+                    };
+                    if (userPrefs.restrictions) summary += `🚫 Dietary: ${userPrefs.restrictions}\n`;
+                    if (userPrefs.cuisine) summary += `🍽️ Cuisine: ${userPrefs.cuisine}\n`;
+                    if (userPrefs.budget) summary += `💰 Budget: ${userPrefs.budget}\n`;
+                    break;
+                case 'movie':
+                    userPrefs = {
+                        genre: document.getElementById('genreInput').value,
+                        length: document.getElementById('lengthInput').value,
+                        suggestions: document.getElementById('suggestionsInput').value
+                    };
+                    if (userPrefs.genre) summary += `🎭 Genres: ${userPrefs.genre}\n`;
+                    if (userPrefs.length) summary += `⏱️ Length: ${userPrefs.length}\n`;
+                    if (userPrefs.suggestions) summary += `💡 Suggestions: ${userPrefs.suggestions}\n`;
+                    break;
+                case 'hike':
+                    userPrefs = {
+                        fitness: document.getElementById('fitnessInput').value,
+                        distance: document.getElementById('distanceInput').value,
+                        features: document.getElementById('featuresInput').value
+                    };
+                    if (userPrefs.fitness) summary += `💪 Fitness: ${userPrefs.fitness}\n`;
+                    if (userPrefs.distance) summary += `📏 Distance: ${userPrefs.distance}\n`;
+                    if (userPrefs.features) summary += `🏞️ Features: ${userPrefs.features}\n`;
+                    break;
+            }
 
             // Disable the form
             const formButtons = document.querySelectorAll('.preference-form .btn');
@@ -805,24 +1391,19 @@
             // Store user preferences
             responses[currentUser] = {
                 participating: true,
-                allergies: allergies,
-                restrictions: restrictions,
-                cuisine: cuisine
+                ...userPrefs
             };
 
-            // Create a summary of what was submitted
-            let summary = '📝 Here are my preferences:\n';
-            if (allergies) summary += `🚫 Allergies: ${allergies}\n`;
-            if (restrictions) summary += `🥗 Dietary restrictions: ${restrictions}\n`;
-            if (cuisine) summary += `🍽️ Preferred cuisines: ${cuisine}\n`;
-            if (!allergies && !restrictions && !cuisine) summary += '✨ No specific requirements - I\'m flexible!';
+            if (Object.values(userPrefs).every(val => !val)) {
+                summary = '✨ No specific requirements - I\'m flexible!';
+            }
 
             addMessage(summary, 'user');
 
             showTypingIndicator();
             setTimeout(() => {
                 hideTypingIndicator();
-                addMessage('Perfect! I\'ve received your preferences. I\'ll analyze everyone\'s dietary needs and cuisine preferences once I hear back from all your friends. This helps me find restaurants that work for everyone! 🎯', 'bot');
+                addMessage('Perfect! I\'ve received your input. I\'ll analyze everyone\'s priorities and preferences to help the group reach the best decision together. Every perspective matters! 🎯', 'bot');
             }, 1500);
         }
 
@@ -839,27 +1420,49 @@
 
             responses[currentUser] = {
                 participating: true,
-                allergies: '',
-                restrictions: '',
-                cuisine: ''
+                priorities: '',
+                constraints: '',
+                preferences: ''
             };
 
-            addMessage('⏭️ No specific preferences - I\'m open to anything!', 'user');
+            addMessage('⏭️ No specific input - I\'m flexible with the group!', 'user');
 
             showTypingIndicator();
             setTimeout(() => {
                 hideTypingIndicator();
-                addMessage('Got it! Flexibility is great - that gives us lots of options. I\'ll still make sure to find excellent restaurants that work for everyone in the group. 😊', 'bot');
+                addMessage('Got it! Your flexibility helps the group. I\'ll still make sure to consider all perspectives to find the best solution for everyone. 😊', 'bot');
             }, 1500);
         }
 
         function simulateFriendResponses() {
-            const friendResponses = [
-                { name: 'Oto', delay: 2000, participating: true, allergies: 'shellfish', restrictions: '', cuisine: 'Italian, Asian' },
-                { name: 'Tanishqa', delay: 4000, participating: true, allergies: '', restrictions: 'vegetarian', cuisine: 'Mediterranean' },
-                { name: 'Karthik', delay: 6000, participating: false },
-                { name: 'Bharath', delay: 8000, participating: true, allergies: '', restrictions: 'gluten-free', cuisine: 'anything' }
-            ];
+            let friendResponses = [];
+            
+            switch(currentDecisionType) {
+                case 'meal':
+                    friendResponses = [
+                        { name: 'Oto', delay: 2000, participating: true, restrictions: 'shellfish allergy', cuisine: 'Italian, Asian', budget: '$$' },
+                        { name: 'Tanishqa', delay: 4000, participating: true, restrictions: 'vegetarian', cuisine: 'Mediterranean', budget: 'doesn\'t matter' },
+                        { name: 'Karthik', delay: 6000, participating: false },
+                        { name: 'Bharath', delay: 8000, participating: true, restrictions: 'gluten-free', cuisine: 'anything good', budget: '$-$$' }
+                    ];
+                    break;
+                case 'movie':
+                    friendResponses = [
+                        { name: 'Oto', delay: 2000, participating: true, genre: 'comedy, action', length: 'under 2.5 hours', suggestions: 'recent releases' },
+                        { name: 'Tanishqa', delay: 4000, participating: true, genre: 'drama, thriller', length: 'doesn\'t matter', suggestions: 'award winners' },
+                        { name: 'Karthik', delay: 6000, participating: false },
+                        { name: 'Bharath', delay: 8000, participating: true, genre: 'sci-fi, adventure', length: 'any', suggestions: 'Marvel or DC' }
+                    ];
+                    break;
+                case 'hike':
+                    friendResponses = [
+                        { name: 'Oto', delay: 2000, participating: true, fitness: 'intermediate', distance: '5-8 miles', features: 'views, not too steep' },
+                        { name: 'Tanishqa', delay: 4000, participating: true, fitness: 'beginner', distance: 'under 5 miles', features: 'waterfalls, shade' },
+                        { name: 'Karthik', delay: 6000, participating: false },
+                        { name: 'Bharath', delay: 8000, participating: true, fitness: 'expert', distance: 'any', features: 'challenging, scenic' }
+                    ];
+                    break;
+            }
 
             friendResponses.forEach(response => {
                 setTimeout(() => {
@@ -880,10 +1483,38 @@
 
                     // Add response message
                     if (response.participating) {
-                        addMessage(`${response.name} joined the session! 🎉`, 'system');
+                        let joinMessage = '';
+                        switch(currentDecisionType) {
+                            case 'meal':
+                                joinMessage = `${response.name} is joining the ${decisionContext.mealType.toLowerCase()}! 🍽️`;
+                                break;
+                            case 'movie':
+                                joinMessage = `${response.name} is in for movie night! 🎬`;
+                                break;
+                            case 'hike':
+                                joinMessage = `${response.name} is joining the hike! 🥾`;
+                                break;
+                            default:
+                                joinMessage = `${response.name} joined the session! 🎉`;
+                        }
+                        addMessage(joinMessage, 'system');
                         responses[response.name] = response;
                     } else {
-                        addMessage(`${response.name} can't make it this time 😔`, 'system');
+                        let declineMessage = '';
+                        switch(currentDecisionType) {
+                            case 'meal':
+                                declineMessage = `${response.name} can't make it to the ${decisionContext.mealType.toLowerCase()} 😔`;
+                                break;
+                            case 'movie':
+                                declineMessage = `${response.name} can't join movie night 😔`;
+                                break;
+                            case 'hike':
+                                declineMessage = `${response.name} can't make it to the hike 😔`;
+                                break;
+                            default:
+                                declineMessage = `${response.name} can't make it this time 😔`;
+                        }
+                        addMessage(declineMessage, 'system');
                         responses[response.name] = { participating: false };
                     }
 
@@ -912,40 +1543,106 @@
                     return;
                 }
 
-                addMessage(`Excellent! I have responses from everyone. Let me analyze the preferences from ${participants.length} participants and find the perfect restaurant... 🔍`, 'bot');
+                addMessage(`Excellent! I have input from everyone. Let me analyze the perspectives from ${participants.length} participants to find the best group decision... 🔍`, 'bot');
 
                 showTypingIndicator();
                 setTimeout(() => {
                     hideTypingIndicator();
 
-                    // Analyze preferences
-                    const allergies = participants.map(p => p[1].allergies).filter(a => a).join(', ');
-                    const restrictions = participants.map(p => p[1].restrictions).filter(r => r).join(', ');
-                    const cuisines = participants.map(p => p[1].cuisine).filter(c => c).join(', ');
+                    // Analyze preferences based on decision type
+                    let analysisMessage = '';
+                    let recommendationMessage = '';
+                    
+                    switch(currentDecisionType) {
+                        case 'meal':
+                            const restrictions = participants.map(p => p[1].restrictions).filter(a => a).join(', ');
+                            const cuisines = participants.map(p => p[1].cuisine).filter(r => r).join(', ');
+                            const budgets = participants.map(p => p[1].budget).filter(c => c).join(', ');
+                            
+                            analysisMessage = `📊 <strong>Group Analysis Complete!</strong><br><br>
+                            🚫 <strong>Dietary Restrictions:</strong> ${restrictions || 'None reported'}<br>
+                            🍽️ <strong>Cuisine Preferences:</strong> ${cuisines || 'Open to anything'}<br>
+                            💰 <strong>Budget Range:</strong> ${budgets || 'Flexible'}`;
+                            
+                            recommendationMessage = `🎯 <strong>Restaurant Recommendation:</strong><br><br>
+                            <strong>🏆 Olive & Thyme Mediterranean Bistro</strong><br>
+                            📍 Downtown Location<br>
+                            ⭐ 4.8/5 stars (1,247 reviews)<br>
+                            💰 $$ - Moderate pricing<br>
+                            🕒 Available ${decisionContext.time}<br><br>
+                            
+                            <strong>✅ Perfect for your group:</strong><br>
+                            • Accommodates all dietary restrictions (vegetarian, gluten-free options)<br>
+                            • Shellfish-free preparation available<br>
+                            • Mediterranean cuisine with Italian influences<br>
+                            • Fits budget range<br><br>
+                            
+                            <strong>📊 Confidence Level:</strong> 92% group alignment<br><br>
+                            Shall I make a reservation for ${participants.length} people? 🍽️`;
+                            break;
+                            
+                        case 'movie':
+                            const genres = participants.map(p => p[1].genre).filter(a => a).join(', ');
+                            const lengths = participants.map(p => p[1].length).filter(r => r).join(', ');
+                            const suggestions = participants.map(p => p[1].suggestions).filter(c => c).join(', ');
+                            
+                            analysisMessage = `📊 <strong>Group Analysis Complete!</strong><br><br>
+                            🎭 <strong>Genre Preferences:</strong> ${genres || 'Open to anything'}<br>
+                            ⏱️ <strong>Length Preferences:</strong> ${lengths || 'Flexible'}<br>
+                            💡 <strong>Suggestions:</strong> ${suggestions || 'Open to recommendations'}`;
+                            
+                            recommendationMessage = `🎯 <strong>Movie Recommendation:</strong><br><br>
+                            <strong>🏆 "Guardians of the Galaxy Vol. 3"</strong><br>
+                            🎬 Action/Comedy/Sci-Fi<br>
+                            ⏱️ 2h 30min<br>
+                            ⭐ 8.1/10 IMDb rating<br>
+                            📅 Available to watch ${decisionContext.time}<br><br>
+                            
+                            <strong>✅ Great choice because:</strong><br>
+                            • Balances action and comedy preferences<br>
+                            • Sci-fi adventure as requested<br>
+                            • Recent release with great reviews<br>
+                            • Perfect for group viewing<br><br>
+                            
+                            <strong>📊 Confidence Level:</strong> 89% group alignment<br><br>
+                            Ready to watch at ${decisionContext.location}? 🎬`;
+                            break;
+                            
+                        case 'hike':
+                            const fitness = participants.map(p => p[1].fitness).filter(a => a).join(', ');
+                            const distances = participants.map(p => p[1].distance).filter(r => r).join(', ');
+                            const features = participants.map(p => p[1].features).filter(c => c).join(', ');
+                            
+                            analysisMessage = `📊 <strong>Group Analysis Complete!</strong><br><br>
+                            💪 <strong>Fitness Levels:</strong> ${fitness || 'Mixed'}<br>
+                            📏 <strong>Distance Preferences:</strong> ${distances || 'Flexible'}<br>
+                            🏞️ <strong>Desired Features:</strong> ${features || 'Open to suggestions'}`;
+                            
+                            recommendationMessage = `🎯 <strong>Hike Recommendation:</strong><br><br>
+                            <strong>🏆 Cascade Falls Trail</strong><br>
+                            📍 Regional Park - 15 minutes away<br>
+                            📏 4.2 miles moderate loop<br>
+                            ⏱️ 2-3 hours estimated time<br>
+                            🌊 Beautiful waterfall views<br><br>
+                            
+                            <strong>✅ Perfect for your group:</strong><br>
+                            • Suitable for beginner to intermediate fitness<br>
+                            • Under 5 miles as preferred<br>
+                            • Features waterfalls and shaded areas<br>
+                            • Scenic views without being too steep<br><br>
+                            
+                            <strong>📊 Confidence Level:</strong> 94% group alignment<br><br>
+                            Perfect for ${decisionContext.time}! 🥾`;
+                            break;
+                    }
 
-                    addMessage(`📊 <strong>Group Analysis Complete!</strong><br><br>
-                    🚫 <strong>Allergies to avoid:</strong> ${allergies || 'None reported'}<br>
-                    🥗 <strong>Dietary restrictions:</strong> ${restrictions || 'None reported'}<br>
-                    🍽️ <strong>Preferred cuisines:</strong> ${cuisines || 'Open to anything'}`, 'bot');
+                    addMessage(analysisMessage, 'bot');
 
                     setTimeout(() => {
                         showTypingIndicator();
                         setTimeout(() => {
                             hideTypingIndicator();
-                            addMessage(`🎯 <strong>Perfect Match Found!</strong><br><br>
-                            <strong>🏆 Olive & Thyme</strong><br>
-                            📍 Mediterranean Bistro - Downtown<br>
-                            ⭐ 4.8/5 stars (1,247 reviews)<br>
-                            💰 $$ - Moderate pricing<br>
-                            🕒 Available today 6:30 PM - 9:00 PM<br><br>
-                            
-                            <strong>✅ Why it's perfect for your group:</strong><br>
-                            • Accommodates all dietary restrictions<br>
-                            • Shellfish-free kitchen available<br>
-                            • Extensive vegetarian & gluten-free menu<br>
-                            • Great Mediterranean cuisine as requested<br><br>
-                            
-                            Shall I make a reservation for <strong>${participants.length} people</strong>? 🍽️`, 'bot');
+                            addMessage(recommendationMessage, 'bot');
 
                             // Reset session
                             setTimeout(() => {
@@ -962,42 +1659,14 @@
             sessionStarted = false;
             responses = {};
             awaitingUserResponse = false;
+            currentDecisionType = null;
+            decisionContext = {};
 
-            startSessionBtn.disabled = false;
-            startSessionBtn.textContent = '🚀 Start New Meal Session';
-
+            decisionTypes.style.display = 'block';
             sessionStatus.textContent = 'Ready to Start';
             sessionStatus.className = 'status-badge status-waiting';
 
-            // Reset friend statuses
-            document.querySelectorAll('.friend-item').forEach(item => {
-                const statusIndicator = item.querySelector('.status-indicator');
-                const statusText = item.querySelector('.friend-status');
-                statusIndicator.className = 'status-indicator status-online';
-                statusText.textContent = 'Online';
-            });
-
-            addMessage('🎉 Session completed! Ready for your next meal planning adventure.', 'system');
-        }
-
-        function updateFriendStatus() {
-            if (!sessionActive) {
-                // Randomly update friend statuses when not in session
-                const friendItems = document.querySelectorAll('.friend-item');
-                friendItems.forEach(item => {
-                    if (Math.random() < 0.1) { // 10% chance to update
-                        const statusIndicator = item.querySelector('.status-indicator');
-                        const statusText = item.querySelector('.friend-status');
-                        const statuses = [
-                            { class: 'status-online', text: 'Online' },
-                            { class: 'status-away', text: 'Away' }
-                        ];
-                        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-                        statusIndicator.className = `status-indicator ${randomStatus.class}`;
-                        statusText.textContent = randomStatus.text;
-                    }
-                });
-            }
+            addMessage('🎉 Session completed! Ready for your next group decision.', 'system');
         }
 
         // Initialize the app
